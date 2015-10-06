@@ -1,41 +1,74 @@
-function pr_str (mal_ds) {
-  var elementType = identify_type(mal_ds)
+/**
+ * Consume a MAL data structure (AST) and return a string representation of the
+ * equivalent s-expression.
+ * @param mal_ds
+ * @returns {String}
+ */
+function pr_str(mal_ds) {
+  var elementType = identify_type(mal_ds);
+
   if (elementType === 'list') {
-    return pr_list(mal_ds)
-  } else if (elementType === 'symbol') {
-    return pr_symbol(mal_ds)
-  } else {
-    return pr_number(mal_ds)
+    return pr_list(mal_ds);
   }
+
+  if (elementType === 'symbol') {
+    return pr_symbol(mal_ds);
+  }
+
+  return pr_number(mal_ds);
 }
 
-function identify_type (elem) {
+/**
+ * Consume a type/object and return its type in a string.
+ * @param elem {String | Array | Number}
+ * @returns {String}
+ */
+function identify_type(elem) {
   if (Object.prototype.toString.call(elem) === '[object Array]') {
-    return 'list'
-  } else if (typeof elem === 'string') {
-    return 'symbol'
-  } else {
-    return 'number'
+    return 'list';
   }
-}
 
-function pr_list (elem) {
-  var lst = '('
-  for (var i = 0; i < elem.length; i++) {
-    lst += ' ' + pr_str(elem[i])
+  if (typeof elem === 'string') {
+    return 'symbol';
   }
-  lst += ')'
-  return lst
+
+  return 'number';
 }
 
-function pr_symbol (elem) {
-  return elem
+/**
+ *  Consume an array and return a equivalent s-expression (string).
+ * @param elem {Array}
+ * @returns {String}
+ */
+function pr_list(elem) {
+  var sexp = '(';
+
+  elem.forEach(function(element, index, array) {
+    sexp += pr_str(element) + ' ';
+  });
+
+  sexp = sexp.trim() + ')';
+  return sexp;
 }
 
-function pr_number (elem) {
-  return elem + ''
+/**
+ * Consume a symbol (string) and return it.
+ * @param elem
+ * @returns {String}
+ */
+function pr_symbol(elem) {
+  return elem;
+}
+
+/**
+ * Consume a number and return a string representation.
+ * @param elem
+ * @returns {String}
+ */
+function pr_number(elem) {
+  return elem + '';
 }
 
 module.exports = {
   pr_str: pr_str
-}
+};
