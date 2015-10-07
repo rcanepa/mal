@@ -38,6 +38,7 @@ var inputStream = function(input) {
     else {
       col++;
     }
+    // console.log('INPUTSTREAM next:', char);
     return char;
   }
 
@@ -47,6 +48,7 @@ var inputStream = function(input) {
    * @returns {String}
    */
   function peek() {
+    // console.log('INPUTSTREAM next:', input[pos]);
     return input[pos];
   }
 
@@ -70,18 +72,24 @@ var inputStream = function(input) {
 };
 
 /**
- * TODO: support for strings, operators, symbols
+ * TODO: handle cases where the input start with a number and contains characters (10avc)
  * @param istream
- * @returns {{peek: peek, next: next}}
+ * @returns {{peek: peek, next: next, eof: eof}}
  */
 var tokenStream = function(istream) {
   var current = null;
+  var init_identifiers = /^[_a-zA-Z]/;
 
   return {
     peek: peek,
-    next: next
+    next: next,
+    eof: eof
   };
 
+  /**
+   *
+   * @returns {*}
+   */
   function read_next() {
     var char;
 
@@ -93,12 +101,35 @@ var tokenStream = function(istream) {
 
     char = istream.peek();
 
+    // Lists (...) and vectors [...]
     if (is_container(char)) {
       return istream.next();
     }
 
+    // + - / * %
+    if (is_math_operator(char)) {
+      return istream.next();
+    }
+
+    // = > < <= >=
+    if (is_logical_operator(char)) {
+      return read_logical_operator();
+    }
+
+    // Integers and floats
     if (is_number(char)) {
       return read_number();
+    }
+
+    // Strings
+    if (is_doublequote(char)) {
+      return read_string() + istream.next();
+    }
+
+    // keywords and identifiers
+    var word = read_word();
+    if (word !== null) {
+      return word;
     }
 
     istream.error('unrecognized char');
@@ -143,6 +174,71 @@ var tokenStream = function(istream) {
   }
 
   /**
+   * Consume a char and produce true if it is equal to a double quote.
+   * @param char
+   * @returns {boolean}
+   */
+  function is_doublequote(char) {
+    return char === '\"';
+  }
+
+  /**
+   * Consume a char and produce true if it is equal to a backslash.
+   * @param char
+   * @returns {boolean}
+   */
+  function is_backslash(char) {
+    return char === '\\';
+  }
+
+  /**
+   * Consume a char and produce true if it is a math operator.
+   * @param char
+   * @returns {boolean}
+   */
+  function is_math_operator(char) {
+    return '+-/*%'.indexOf(char) >= 0;
+  }
+
+  /**
+   * Consume a char and produce true if it is a logical operator.
+   * @param char
+   * @returns {boolean}
+   */
+  function is_logical_operator(char) {
+    return '><='.indexOf(char) >= 0;
+  }
+
+  /**
+   * Iterate over an inputStream until it found a white space. If the string
+   * start with a valid character, the word is returned.
+   * @returns {string|null}
+   */
+  function read_word() {
+    var word = '';
+    word += read_until(function(char) {
+      return !is_white_space(char) && !is_container(char);
+    });
+    if (!word[0].match(init_identifiers)) {
+      return null;
+    }
+    return word;
+  }
+
+  /**
+   * Return a logical operator from the inputStream. It check if the operator
+   * is two characters long.
+   * @returns {string}
+   */
+  function read_logical_operator() {
+    var operator = istream.next();
+    if ((operator === '>' || operator === '<') && istream.peek() === '=') {
+      operator += istream.next();
+    }
+    return operator;
+  }
+
+  /**
    * Iterate over the inputStream and return a string representing a number (integer or float).
    * @returns {string}
    */
@@ -150,6 +246,41 @@ var tokenStream = function(istream) {
     return read_until(is_number);
   }
 
+  /**
+   * Iterate over an inputStream until it found a closing double quote (the end
+   * of the string). If a escaped double quote is found, a recursive execution will
+   * continue to get the rest of the string.
+   * @returns {string}
+   */
+  function read_string() {
+    var str = '';
+    str += istream.next();
+    str += read_until(function(char) { return char !== "\""; });
+
+    // Check for an escaped quote
+    var idx = str.length - 1;
+    var backslashes = 0;
+    while (idx >= 0) {
+      if (is_backslash(str[idx])) {
+        backslashes++;
+      }
+      else {
+        break;
+      }
+      idx--;
+    }
+    if (backslashes % 2 === 1) {
+      str += read_string();
+    }
+    return str;
+  }
+
+  /**
+   * Consume a predicate and iterate over the inputStream until it gets evaluated to
+   * false. Return all the character whose were evaluated to true.
+   * @param predicate
+   * @returns {string}
+   */
   function read_until(predicate) {
     var str = '';
     while (!istream.eof() && predicate(istream.peek())) {
@@ -175,6 +306,10 @@ var tokenStream = function(istream) {
     var token = current;
     current = null;
     return token || read_next();
+  }
+
+  function eof() {
+    return peek() === null;
   }
 
 };
@@ -212,15 +347,10 @@ var readerFactory = function() {
  * @returns {Array}
  */
 function read_str(sexp) {
-  var ast, reader;
-  var tokens = tokenizer(sexp);
-  reader = readerFactory();
-  // console.log(tokens);
-  tokens.forEach(function(element, index, array) {
-    reader.add(element);
-  });
-  // console.log(reader);
-  ast = read_form(reader);
+  var ast;
+  var istream = inputStream(sexp);
+  var tstream = tokenStream(tstream);
+  ast = read_form(tstream);
   return ast;
 }
 
@@ -228,7 +358,6 @@ function read_str(sexp) {
  * Consume a s-expression (string) and produce a flat list of tokens.
  * E.g.: '(+ (- 2 3) 4)' -> [ '(', '+', '(', '-', '2', '3', ')', '4', ')' ]
  * @param sexp  {String}
- * TODO: implement this as a real lexer (without regular expressions)
  */
 function tokenizer(sexp) {
   sexp = remove_comments(sexp);
@@ -248,25 +377,25 @@ function tokenizer(sexp) {
 }
 
 /**
- * Consume a reader with a list of tokens (an unfinished flat structure) and creates
+ * Consume a tokenStream with a list of tokens (an unfinished flat structure) and creates
  * an AST (nested lists).
  * E.g.: [ '(', '+', '(', '-', '2', '3', ')', '4', ')' ] -> [ '+', [ '-', '2', '3' ], '4' ]
- * @param reader  {Object}
+ * @param tstream  {Object}
  * @returns {String, Number, Boolean, Array}
  */
-function read_form(reader) {
+function read_form(tstream) {
 
-  // console.log(reader);
+  // console.log(tstream);
 
-  if (reader.length === 0) {
+  if (tstream.eof()) {
     console.log('unexpected EOF while reading');
     // throw new Error('unexpected EOF while reading');
   }
 
-  var token = reader.peek();
+  var token = tstream.peek();
 
   if (token === '(') {
-    return read_list(reader);
+    return read_list(tstream);
   }
 
   if (token === ')') {
@@ -274,7 +403,7 @@ function read_form(reader) {
   }
 
   if (token === '[') {
-    return read_vector(reader);
+    return read_vector(tstream);
   }
 
   if (token === ']') {
@@ -282,88 +411,88 @@ function read_form(reader) {
   }
 
   if (token === '\'') {
-    return read_quote(reader);
+    return read_quote(tstream);
   }
 
   if (token === '`') {
-    return read_quasicuote(reader);
+    return read_quasicuote(tstream);
   }
 
   if (token === '~') {
-    return read_unquote(reader);
+    return read_unquote(tstream);
   }
 
   if (token === '~@') {
-    return read_splice_unquote(reader);
+    return read_splice_unquote(tstream);
   }
 
-  return read_atom(reader);
+  return read_atom(tstream);
 
 }
 
 /**
- * Consume a reader with its next token equal to '(', and return an Array with all
+ * Consume a tokenStream with its next token equal to '(', and return an Array with all
  * the elements that are inside the parenthesis.
- * @param reader {Object}
+ * @param tstream {Object}
  * @returns {Array}
  */
-function read_list(reader) {
+function read_list(tstream) {
   var lst = [];
 
   // drop the ( parenthesis
-  reader.next();
+  tstream.next();
 
-  while (reader.peek() !== ')' && reader.peek() !== undefined) {
-    lst.push(read_form(reader));
+  while (tstream.peek() !== ')' && tstream.peek() !== undefined) {
+    lst.push(read_form(tstream));
   }
 
-  if (reader.peek() !== ')') {
+  if (tstream.peek() !== ')') {
     // throw Error('expected \')\' got EOF');
     console.log('expected \')\' got EOF');
   }
 
   // drop the ) parenthesis
-  reader.next();
+  tstream.next();
 
   return lst;
 }
 
 /**
- * Consume a reader with its next token equal to '[', and return an Array with all
+ * Consume a tokenStream with its next token equal to '[', and return an Array with all
  * the elements that are inside the parenthesis.
- * @param reader {Object}
+ * @param tstream {Object}
  * @returns {Array}
  */
-function read_vector(reader) {
+function read_vector(tstream) {
   var vec = [];
 
   // drop the [ bracket
-  reader.next();
+  tstream.next();
 
-  while (reader.peek() !== ']' && reader.peek() !== undefined) {
-    vec.push(read_form(reader));
+  while (tstream.peek() !== ']' && tstream.peek() !== undefined) {
+    vec.push(read_form(tstream));
   }
 
-  if (reader.peek() !== ']') {
+  if (tstream.peek() !== ']') {
     // throw Error('expected \']\' got EOF');
     console.log('expected \']\' got EOF');
   }
 
   // drop the ] bracket
-  reader.next();
+  tstream.next();
 
   return vec;
 }
 
 /**
- * Consume a reader and check it's next token to return a string if the token is a symbol
+ * Consume a tokenStream and check it's next token to return a string if the token is a symbol
  * or an integer if the token is a number.
  * TODO: support for booleans, floats, variables
- * @param reader {Object}
+ * @param tstream {Object}
  * @returns {String | Number}
  */
-function read_atom(reader) {
-  var atom = reader.next();
+function read_atom(tstream) {
+  var atom = tstream.next();
 
   if (!isNaN(atom)) {
     return parseInt(atom);
@@ -373,70 +502,70 @@ function read_atom(reader) {
 }
 
 /**
- * Consume a quote expression (from the reader) and return a list with the first
+ * Consume a quote expression (from the tokenStream) and return a list with the first
  * element equal to "quote" and the second element equal to the evaluation of the
- * reader's next token.
- * @param reader {Object}
+ * tokenStream's next token.
+ * @param tstream {Object}
  * @returns {Array}
  */
-function read_quote(reader) {
+function read_quote(tstream) {
   var lst = ['quote'];
 
-  // drop the ' from the reader
-  reader.next();
+  // drop the ' from the tokenStream
+  tstream.next();
 
-  lst.push(read_form(reader));
+  lst.push(read_form(tstream));
   return lst;
 }
 
 /**
- * Consume a quasiquote expression (from the reader) and return a list with the first
+ * Consume a quasiquote expression (from the tokenStream) and return a list with the first
  * element equal to "quasiquote" and the second element equal to the evaluation of the
- * reader's next token.
- * @param reader {Object}
+ * tokenStream's next token.
+ * @param tstream {Object}
  * @returns {Array}
  */
-function read_quasicuote(reader) {
+function read_quasicuote(tstream) {
   var lst = ['quasiquote'];
 
-  // drop the ` from the reader
-  reader.next();
+  // drop the ` from the tokenStream
+  tstream.next();
 
-  lst.push(read_form(reader));
+  lst.push(read_form(tstream));
   return lst;
 }
 
 /**
- * Consume an unquote expression (from the reader) and return a list with the first
+ * Consume an unquote expression (from the tokenStream) and return a list with the first
  * element equal to "unquote" and the second element equal to the evaluation of the
- * reader's next token.
- * @param reader {Object}
+ * tokenStream's next token.
+ * @param tstream {Object}
  * @returns {Array}
  */
-function read_unquote(reader) {
+function read_unquote(tstream) {
   var lst = ['unquote'];
 
-  // drop the ~ from the reader
-  reader.next();
+  // drop the ~ from the tokenStream
+  tstream.next();
 
-  lst.push(read_form(reader));
+  lst.push(read_form(tstream));
   return lst;
 }
 
 /**
- * Consume an splice-unquote expression (from the reader) and return a list with the first
+ * Consume an splice-unquote expression (from the tokenStream) and return a list with the first
  * element equal to "splice-unquote" and the second element equal to the evaluation of the
- * reader's next token.
- * @param reader {Object}
+ * tokenStream's next token.
+ * @param tstream {Object}
  * @returns {Array}
  */
-function read_splice_unquote(reader) {
+function read_splice_unquote(tstream) {
   var lst = ['splice-unquote'];
 
-  // drop the ~@ from the reader
-  reader.next();
+  // drop the ~@ from the tokenStream
+  tstream.next();
 
-  lst.push(read_form(reader));
+  lst.push(read_form(tstream));
   return lst;
 }
 
