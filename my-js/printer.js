@@ -5,50 +5,51 @@
  * @returns {String}
  */
 function pr_str(mal_ds) {
-  var elementType = identify_type(mal_ds);
+  // console.log('From printer:', mal_ds);
 
-  if (elementType === 'list') {
+  if (mal_ds.type === 'list' || mal_ds.type === 'vector') {
     return pr_list(mal_ds);
   }
 
-  if (elementType === 'symbol') {
-    return pr_symbol(mal_ds);
+  if ('quote quasiquote unquote splice-unquote'.indexOf(mal_ds.type) >= 0) {
+    return pr_quote(mal_ds);
   }
 
-  return pr_number(mal_ds);
+  if (mal_ds.type === 'symbol') {
+    return pr_symbol(mal_ds.value);
+  }
+
+  return pr_number(mal_ds.value);
 }
 
 /**
- * Consume a type/object and return its type in a string.
- * @param elem {String | Array | Number}
- * @returns {String}
- */
-function identify_type(elem) {
-  if (Object.prototype.toString.call(elem) === '[object Array]') {
-    return 'list';
-  }
-
-  if (typeof elem === 'string') {
-    return 'symbol';
-  }
-
-  return 'number';
-}
-
-/**
- *  Consume an array and return a equivalent s-expression (string).
- * @param elem {Array}
+ *  Consume a mal_ds Object and return a equivalent s-expression (string).
+ * @param elem {Object}
  * @returns {String}
  */
 function pr_list(elem) {
-  var sexp = '(';
+  var opener = '', values = '', sexp = '';
 
-  elem.forEach(function(element, index, array) {
-    sexp += pr_str(element) + ' ';
+  elem.type === 'list' ? opener += '(' : opener += '[';
+
+  elem.value.forEach(function(element, index, array) {
+    values += pr_str(element) + ' ';
   });
 
-  sexp = sexp.trim() + ')';
+  sexp += opener + values;
+  sexp = sexp.trim();
+  (elem.type === 'list') ? sexp += ')' : sexp += ']';
+
   return sexp;
+}
+
+/**
+ * Consume a quote Object and return its string representation.
+ * @param elem
+ * @returns {string}
+ */
+function pr_quote(elem) {
+  return '(' + elem.type + ' ' + pr_str(elem.value) + ')';
 }
 
 /**

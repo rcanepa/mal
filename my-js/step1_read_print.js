@@ -19,20 +19,31 @@ function REP (str) {
   return PRINT(EVAL(READ(str)));
 }
 
-var readline = require('readline');
+/*
+Execute this piece of code only if this file was not required
+by another file.
+ */
+if (require.main === module) {
 
-var rli = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-  terminal: false
-});
+  var readline = require('readline');
 
-rli.setPrompt('user> ');
-rli.prompt();
+  var rli = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    terminal: false
+  });
 
-rli.on('line', function (data) {
-  console.log(REP(data));
-  rli.prompt()
-}).on('close', function () {
-  process.exit(0);
-});
+  rli.setPrompt('user> ');
+  rli.prompt();
+
+  rli.on('line', function (data) {
+    console.log(REP(data));
+    rli.prompt()
+  }).on('close', function () {
+    process.exit(0);
+  });
+}
+
+module.exports = {
+  REP: REP
+};

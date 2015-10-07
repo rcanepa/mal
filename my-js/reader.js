@@ -38,7 +38,6 @@ var inputStream = function(input) {
     else {
       col++;
     }
-    // console.log('INPUTSTREAM next:', char);
     return char;
   }
 
@@ -48,7 +47,6 @@ var inputStream = function(input) {
    * @returns {String}
    */
   function peek() {
-    // console.log('INPUTSTREAM next:', input[pos]);
     return input[pos];
   }
 
@@ -79,6 +77,7 @@ var inputStream = function(input) {
 var tokenStream = function(istream) {
   var current = null;
   var init_identifiers = /^[_a-zA-Z]/;
+  var non_string_quotes = '\'\`\~';
 
   return {
     peek: peek,
@@ -108,7 +107,7 @@ var tokenStream = function(istream) {
 
     // + - / * %
     if (is_math_operator(char)) {
-      return istream.next();
+      return read_until(function (char) { return !is_white_space(char) && !is_container(char); } );
     }
 
     // = > < <= >=
@@ -124,6 +123,16 @@ var tokenStream = function(istream) {
     // Strings
     if (is_doublequote(char)) {
       return read_string() + istream.next();
+    }
+
+    // ' ` ~ ~@
+    if (is_quote(char)) {
+      return read_quote();
+    }
+
+    // :keyword
+    if (is_keyword(char)) {
+      return read_until(function (char) { return !is_white_space(char) && !is_container(char); } );
     }
 
     // keywords and identifiers
@@ -143,7 +152,7 @@ var tokenStream = function(istream) {
    * @returns {boolean}
    */
   function is_white_space(char) {
-    return ' \n\r'.indexOf(char) >= 0;
+    return ', \n\r'.indexOf(char) >= 0;
   }
 
   /**
@@ -183,6 +192,15 @@ var tokenStream = function(istream) {
   }
 
   /**
+   * Consume a char and produce true if it is equal to a non-string quote: ' ` ~ ~@.
+   * @param char
+   * @returns {boolean}
+   */
+  function is_quote(char) {
+    return non_string_quotes.indexOf(char) >= 0;
+  }
+
+  /**
    * Consume a char and produce true if it is equal to a backslash.
    * @param char
    * @returns {boolean}
@@ -207,6 +225,15 @@ var tokenStream = function(istream) {
    */
   function is_logical_operator(char) {
     return '><='.indexOf(char) >= 0;
+  }
+
+  /**
+   * Consume a char and produce true if it is a keyword (starts with :).
+   * @param char
+   * @returns {boolean}
+   */
+  function is_keyword(char) {
+    return char === ':';
   }
 
   /**
@@ -244,6 +271,18 @@ var tokenStream = function(istream) {
    */
   function read_number() {
     return read_until(is_number);
+  }
+
+  /**
+   * Iterate over the inputStream and return non string quote (operator): ' ` ~ ~@.
+   * @returns {string}
+   */
+  function read_quote() {
+    var quote = istream.next();
+    if (quote === '~' && istream.peek() === '@') {
+      return quote + istream.next();
+    }
+    return quote;
   }
 
   /**
@@ -314,32 +353,6 @@ var tokenStream = function(istream) {
 
 };
 
-/**
- * Reader Factory
- * @returns {{add: add, peek: peek, next: next}}
- */
-var readerFactory = function() {
-  var length = 0;
-  var index = 0;
-  return {
-    add: add,
-    peek: peek,
-    next: next
-  };
-
-  function add(element) {
-    Array.prototype.push.call(this, element);
-  }
-
-  function peek() {
-    return this[index];
-  }
-
-  function next() {
-    return this[index++];
-  }
-
-};
 
 /**
  * Consume a s-expression and produce an AST representation of it.
@@ -349,43 +362,21 @@ var readerFactory = function() {
 function read_str(sexp) {
   var ast;
   var istream = inputStream(sexp);
-  var tstream = tokenStream(tstream);
+  var tstream = tokenStream(istream);
   ast = read_form(tstream);
   return ast;
 }
 
-/**
- * Consume a s-expression (string) and produce a flat list of tokens.
- * E.g.: '(+ (- 2 3) 4)' -> [ '(', '+', '(', '-', '2', '3', ')', '4', ')' ]
- * @param sexp  {String}
- */
-function tokenizer(sexp) {
-  sexp = remove_comments(sexp);
-  sexp = clean_sexp(sexp);
-
-  var re = /[\s,]*(~@|[\[\]{}()'`~^@]|"(?:\\.|[^\\"])*"|;.*|[^\s\[\]{}('"`,;)]*)/;
-  var tokens = [];
-  var match = sexp.match(re);
-
-  while (match[0] !== '') {
-    tokens.push(match[0].trim());
-    sexp = sexp.slice(match.index + match[0].length);
-    match = sexp.match(re);
-  }
-
-  return tokens;
-}
 
 /**
  * Consume a tokenStream with a list of tokens (an unfinished flat structure) and creates
  * an AST (nested lists).
  * E.g.: [ '(', '+', '(', '-', '2', '3', ')', '4', ')' ] -> [ '+', [ '-', '2', '3' ], '4' ]
  * @param tstream  {Object}
- * @returns {String, Number, Boolean, Array}
+ * @returns {String, Number, Boolean, Array, Object}
  */
 function read_form(tstream) {
 
-  // console.log(tstream);
 
   if (tstream.eof()) {
     console.log('unexpected EOF while reading');
@@ -395,7 +386,7 @@ function read_form(tstream) {
   var token = tstream.peek();
 
   if (token === '(') {
-    return read_list(tstream);
+    return { type: 'list', value: read_list(tstream) };
   }
 
   if (token === ')') {
@@ -403,7 +394,7 @@ function read_form(tstream) {
   }
 
   if (token === '[') {
-    return read_vector(tstream);
+    return { type: 'vector', value: read_vector(tstream) };
   }
 
   if (token === ']') {
@@ -411,19 +402,19 @@ function read_form(tstream) {
   }
 
   if (token === '\'') {
-    return read_quote(tstream);
+    return { type: 'quote', value: read_quote(tstream) };
   }
 
   if (token === '`') {
-    return read_quasicuote(tstream);
+    return { type: 'quasiquote', value: read_quote(tstream) };
   }
 
   if (token === '~') {
-    return read_unquote(tstream);
+    return { type: 'unquote', value: read_quote(tstream) };
   }
 
   if (token === '~@') {
-    return read_splice_unquote(tstream);
+    return { type: 'splice-unquote', value: read_quote(tstream) };
   }
 
   return read_atom(tstream);
@@ -489,99 +480,31 @@ function read_vector(tstream) {
  * or an integer if the token is a number.
  * TODO: support for booleans, floats, variables
  * @param tstream {Object}
- * @returns {String | Number}
+ * @returns {Object}
  */
 function read_atom(tstream) {
   var atom = tstream.next();
 
   if (!isNaN(atom)) {
-    return parseInt(atom);
+    return { type: 'number', value: parseInt(atom) };
   }
 
-  return atom;
+  return { type: 'symbol', value: atom };
 }
 
 /**
  * Consume a quote expression (from the tokenStream) and return a list with the first
- * element equal to "quote" and the second element equal to the evaluation of the
- * tokenStream's next token.
+ * element equal to "quote", "unquote", "quasiquote", or "splice-unquote" and the second
+ * element equal to the evaluation of the tokenStream's next token.
  * @param tstream {Object}
  * @returns {Array}
  */
 function read_quote(tstream) {
-  var lst = ['quote'];
-
   // drop the ' from the tokenStream
   tstream.next();
-
-  lst.push(read_form(tstream));
-  return lst;
+  return read_form(tstream);
 }
 
-/**
- * Consume a quasiquote expression (from the tokenStream) and return a list with the first
- * element equal to "quasiquote" and the second element equal to the evaluation of the
- * tokenStream's next token.
- * @param tstream {Object}
- * @returns {Array}
- */
-function read_quasicuote(tstream) {
-  var lst = ['quasiquote'];
-
-  // drop the ` from the tokenStream
-  tstream.next();
-
-  lst.push(read_form(tstream));
-  return lst;
-}
-
-/**
- * Consume an unquote expression (from the tokenStream) and return a list with the first
- * element equal to "unquote" and the second element equal to the evaluation of the
- * tokenStream's next token.
- * @param tstream {Object}
- * @returns {Array}
- */
-function read_unquote(tstream) {
-  var lst = ['unquote'];
-
-  // drop the ~ from the tokenStream
-  tstream.next();
-
-  lst.push(read_form(tstream));
-  return lst;
-}
-
-/**
- * Consume an splice-unquote expression (from the tokenStream) and return a list with the first
- * element equal to "splice-unquote" and the second element equal to the evaluation of the
- * tokenStream's next token.
- * @param tstream {Object}
- * @returns {Array}
- */
-function read_splice_unquote(tstream) {
-  var lst = ['splice-unquote'];
-
-  // drop the ~@ from the tokenStream
-  tstream.next();
-
-  lst.push(read_form(tstream));
-  return lst;
-}
-
-/**
- * Consume an s-expression and delete all the comments lines (start by ;). This
- * only works with one line comments.
- * @param sexp {String}
- * @returns {String}
- */
-function remove_comments(sexp) {
-  return sexp.replace(/;.*[\r|\n]$/, '');
-}
-
-function clean_sexp(sexp) {
-  return sexp.replace(/,/g, '');
-}
 
 module.exports = {
   read_str: read_str,

@@ -1,6 +1,7 @@
 var test = require('tape');
 var reader = require('./../reader');
 
+
 test('tokenStream number assertions', function(assert) {
   var sexp = '(10.1 2 33)';
 
@@ -139,3 +140,57 @@ test('tokenStream identifiers assertions', function(assert) {
 
 });
 
+test('tokenStream simple quote assertions', function(assert) {
+  var sexp = '(\' ` ~ ~@)';
+
+  var is = reader.inputStream(sexp);
+  var ts = reader.tokenStream(is);
+
+  assert.equal(ts.peek(), '(', 'first peek');
+  assert.equal(ts.peek(), '(', 'second peek (the result must be the same)');
+  assert.equal(ts.next(), '(', 'next item = (');
+  assert.equal(ts.next(), '\'', 'next item = \'');
+  assert.equal(ts.next(), '`', 'next item = `');
+  assert.equal(ts.next(), '~', 'next item = ~');
+  assert.equal(ts.next(), '~@', 'next item = ~@');
+  assert.equal(ts.next(), ')', 'next item = )');
+  assert.equal(ts.next(), null, 'next item = null');
+  assert.end();
+
+});
+
+test('tokenStream keywords assertions', function(assert) {
+  var sexp = '(:key 12 "abc" :another)';
+
+  var is = reader.inputStream(sexp);
+  var ts = reader.tokenStream(is);
+
+  assert.equal(ts.next(), '(', 'next item = (');
+  assert.equal(ts.next(), ':key', 'next item = :key');
+  assert.equal(ts.next(), '12', 'next item = 12');
+  assert.equal(ts.next(), '"abc"', 'next item = "abc"');
+  assert.equal(ts.next(), ':another', 'next item = :another');
+  assert.equal(ts.next(), ')', 'next item = )');
+  assert.equal(ts.next(), null, 'next item = null');
+  assert.end();
+
+});
+
+test('tokenStream vector assertions', function(assert) {
+  var sexp = '[1 2 3]';
+
+  var is = reader.inputStream(sexp);
+  var ts = reader.tokenStream(is);
+
+  assert.equal(ts.peek(), '[', 'first peek');
+  assert.equal(ts.peek(), '[', 'second peek: the result must be the same)');
+  assert.equal(ts.next(), '[', 'next item = [');
+  assert.equal(ts.next(), '1', 'next item = 1');
+  assert.equal(ts.next(), '2', 'next item = 2');
+  assert.equal(ts.peek(), '3', 'peek the same item = 3');
+  assert.equal(ts.next(), '3', 'next item = 3');
+  assert.equal(ts.next(), ']', 'next item = ]');
+  assert.equal(ts.next(), null, 'next item = null');
+  assert.end();
+
+});
