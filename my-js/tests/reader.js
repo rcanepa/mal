@@ -194,3 +194,39 @@ test('tokenStream vector assertions', function(assert) {
   assert.end();
 
 });
+
+test('tokenStream keyword assertions', function(assert) {
+  var sexp = '(:k1 :k2 :k3)';
+
+  var is = reader.inputStream(sexp);
+  var ts = reader.tokenStream(is);
+
+  assert.equal(ts.peek(), '(', 'first peek');
+  assert.equal(ts.peek(), '(', 'second peek: the result must be the same)');
+  assert.equal(ts.next(), '(', 'next item = (');
+  assert.equal(ts.next(), ':k1', 'next item = :k1');
+  assert.equal(ts.next(), ':k2', 'next item = :k2');
+  assert.equal(ts.peek(), ':k3', 'peek the same item = :k3');
+  assert.equal(ts.next(), ':k3', 'next item = :k3');
+  assert.equal(ts.next(), ')', 'next item = )');
+  assert.equal(ts.next(), null, 'next item = null');
+  assert.end();
+
+});
+
+test('tokenStream hashmap assertions', function(assert) {
+  var sexp = '{"a" 1}';
+
+  var is = reader.inputStream(sexp);
+  var ts = reader.tokenStream(is);
+
+  assert.equal(ts.peek(), '{', 'first peek');
+  assert.equal(ts.peek(), '{', 'second peek: the result must be the same)');
+  assert.equal(ts.next(), '{', 'next item = {');
+  assert.equal(ts.next(), '"a"', 'next item = "a"');
+  assert.equal(ts.next(), '1', 'next item = 1');
+  assert.equal(ts.next(), '}', 'next item = }');
+  assert.equal(ts.next(), null, 'next item = null');
+  assert.end();
+
+});

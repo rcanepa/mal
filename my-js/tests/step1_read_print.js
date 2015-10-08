@@ -11,6 +11,9 @@ test('', function(assert) {
   assert.equal(repl.REP('~@(1 2 3)'), '(splice-unquote (1 2 3))', 'testing splice unquote');
   assert.equal(repl.REP(':key'), ':key', 'testing keywords');
   assert.equal(repl.REP('(:key 10 "abc")'), '(:key 10 "abc")', 'testing keyword inside a list');
+  assert.equal(repl.REP('{"abc" 1}'), '{"abc" 1}', 'testing hashmaps');
+  assert.equal(repl.REP('{"abc" {"a" {"b" 12}}}'), '{"abc" {"a" {"b" 12}}}', 'testing nested hashmaps');
+  assert.equal(repl.REP('{"abc" {"a" {"b" [1 2 3]}}}'), '{"abc" {"a" {"b" [1 2 3]}}}', 'testing nested hashmaps with a vector');
   assert.end();
 });
 

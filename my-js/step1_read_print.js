@@ -37,7 +37,17 @@ if (require.main === module) {
   rli.prompt();
 
   rli.on('line', function (data) {
-    console.log(REP(data));
+    try {
+      printer.println(REP(data));
+    }
+    catch (exc) {
+      if (exc.stack) {
+        printer.println(exc.stack);
+      }
+      else {
+        printer.println(exc);
+      }
+    }
     rli.prompt()
   }).on('close', function () {
     process.exit(0);

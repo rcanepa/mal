@@ -5,9 +5,8 @@
  * @returns {String}
  */
 function pr_str(mal_ds) {
-  // console.log('From printer:', mal_ds);
 
-  if (mal_ds.type === 'list' || mal_ds.type === 'vector') {
+  if (mal_ds.type === 'list' || mal_ds.type === 'vector' || mal_ds.type === 'hashmap') {
     return pr_list(mal_ds);
   }
 
@@ -23,14 +22,22 @@ function pr_str(mal_ds) {
 }
 
 /**
- *  Consume a mal_ds Object and return a equivalent s-expression (string).
+ * Consume a mal_ds Object and return a equivalent s-expression (string).
  * @param elem {Object}
  * @returns {String}
  */
 function pr_list(elem) {
   var opener = '', values = '', sexp = '';
 
-  elem.type === 'list' ? opener += '(' : opener += '[';
+  if (elem.type === 'list') {
+    opener += '(';
+  }
+  else if (elem.type === 'vector') {
+    opener += '[';
+  }
+  else {
+    opener += '{';
+  }
 
   elem.value.forEach(function(element, index, array) {
     values += pr_str(element) + ' ';
@@ -38,7 +45,16 @@ function pr_list(elem) {
 
   sexp += opener + values;
   sexp = sexp.trim();
-  (elem.type === 'list') ? sexp += ')' : sexp += ']';
+
+  if (elem.type === 'list') {
+    sexp += ')';
+  }
+  else if (elem.type === 'vector'){
+    sexp += ']';
+  }
+  else {
+    sexp += '}';
+  }
 
   return sexp;
 }
@@ -70,6 +86,11 @@ function pr_number(elem) {
   return elem + '';
 }
 
+var println = function () {
+  console.log.apply(console, arguments);
+};
+
 module.exports = {
-  pr_str: pr_str
+  pr_str: pr_str,
+  println: println
 };

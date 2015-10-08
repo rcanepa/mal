@@ -1,5 +1,7 @@
 'use strict';
 
+var fs = require('fs');
+
 /**
  * MAL expression (code) -> inputStream -> tokenStream -> Array
  */
@@ -64,6 +66,7 @@ var inputStream = function(input) {
    * @param msg
    */
   function error(msg) {
+    // console.log(msg + ' (' + line + ':' + col + ') ');
     throw new Error(msg + ' (' + line + ':' + col + ') ');
   }
 
@@ -100,14 +103,16 @@ var tokenStream = function(istream) {
 
     char = istream.peek();
 
-    // Lists (...) and vectors [...]
+    // Lists (...), vectors [...] and hashmaps {...}
     if (is_container(char)) {
       return istream.next();
     }
 
     // + - / * %
     if (is_math_operator(char)) {
-      return read_until(function (char) { return !is_white_space(char) && !is_container(char); } );
+      return read_until(function(char) {
+        return !is_white_space(char) && !is_container(char);
+      });
     }
 
     // = > < <= >=
@@ -132,7 +137,9 @@ var tokenStream = function(istream) {
 
     // :keyword
     if (is_keyword(char)) {
-      return read_until(function (char) { return !is_white_space(char) && !is_container(char); } );
+      return read_until(function(char) {
+        return !is_white_space(char) && !is_container(char);
+      });
     }
 
     // keywords and identifiers
@@ -161,7 +168,7 @@ var tokenStream = function(istream) {
    * @returns {boolean}
    */
   function is_container(char) {
-    return '()[]'.indexOf(char) >= 0;
+    return '()[]{}'.indexOf(char) >= 0;
   }
 
   /**
@@ -170,7 +177,7 @@ var tokenStream = function(istream) {
    * @returns {boolean}
    */
   function is_number(char) {
-    return (char !== '' && !is_white_space(char) && !isNaN(char)) || is_point(char);
+    return (char !== '' && !is_white_space(char) && !isNaN(char)) || is_point(char);
   }
 
   /**
@@ -294,7 +301,9 @@ var tokenStream = function(istream) {
   function read_string() {
     var str = '';
     str += istream.next();
-    str += read_until(function(char) { return char !== "\""; });
+    str += read_until(function(char) {
+      return char !== "\"";
+    });
 
     // Check for an escaped quote
     var idx = str.length - 1;
@@ -333,7 +342,7 @@ var tokenStream = function(istream) {
    * @returns {string}
    */
   function peek() {
-    return current || (current = read_next());
+    return current || (current = read_next());
   }
 
   /**
@@ -364,6 +373,8 @@ function read_str(sexp) {
   var istream = inputStream(sexp);
   var tstream = tokenStream(istream);
   ast = read_form(tstream);
+  fs.appendFileSync(__dirname + '/execution.log', JSON.stringify([istream, tstream, ast]));
+  fs.appendFileSync(__dirname + '/execution.log', '\n');
   return ast;
 }
 
@@ -377,16 +388,15 @@ function read_str(sexp) {
  */
 function read_form(tstream) {
 
-
   if (tstream.eof()) {
-    console.log('unexpected EOF while reading');
-    // throw new Error('unexpected EOF while reading');
+    // console.log('unexpected EOF while reading');
+    throw new Error('unexpected EOF while reading');
   }
 
   var token = tstream.peek();
 
   if (token === '(') {
-    return { type: 'list', value: read_list(tstream) };
+    return {type: 'list', value: read_list(tstream)};
   }
 
   if (token === ')') {
@@ -394,27 +404,35 @@ function read_form(tstream) {
   }
 
   if (token === '[') {
-    return { type: 'vector', value: read_vector(tstream) };
+    return {type: 'vector', value: read_vector(tstream)};
   }
 
   if (token === ']') {
     throw new Error('expected \']\', got EOF');
   }
 
+  if (token === '{') {
+    return {type: 'hashmap', value: read_hashmap(tstream)};
+  }
+
+  if (token === '}') {
+    throw new Error('expected \'}\', got EOF');
+  }
+
   if (token === '\'') {
-    return { type: 'quote', value: read_quote(tstream) };
+    return {type: 'quote', value: read_quote(tstream)};
   }
 
   if (token === '`') {
-    return { type: 'quasiquote', value: read_quote(tstream) };
+    return {type: 'quasiquote', value: read_quote(tstream)};
   }
 
   if (token === '~') {
-    return { type: 'unquote', value: read_quote(tstream) };
+    return {type: 'unquote', value: read_quote(tstream)};
   }
 
   if (token === '~@') {
-    return { type: 'splice-unquote', value: read_quote(tstream) };
+    return {type: 'splice-unquote', value: read_quote(tstream)};
   }
 
   return read_atom(tstream);
@@ -433,13 +451,12 @@ function read_list(tstream) {
   // drop the ( parenthesis
   tstream.next();
 
-  while (tstream.peek() !== ')' && tstream.peek() !== undefined) {
+  while (tstream.peek() !== ')' && !tstream.eof()) {
     lst.push(read_form(tstream));
   }
 
   if (tstream.peek() !== ')') {
-    // throw Error('expected \')\' got EOF');
-    console.log('expected \')\' got EOF');
+    throw Error('expected \')\' got EOF');
   }
 
   // drop the ) parenthesis
@@ -460,19 +477,44 @@ function read_vector(tstream) {
   // drop the [ bracket
   tstream.next();
 
-  while (tstream.peek() !== ']' && tstream.peek() !== undefined) {
+  while (tstream.peek() !== ']' && !tstream.eof()) {
     vec.push(read_form(tstream));
   }
 
   if (tstream.peek() !== ']') {
-    // throw Error('expected \']\' got EOF');
-    console.log('expected \']\' got EOF');
+    throw Error('expected \']\' got EOF');
   }
 
   // drop the ] bracket
   tstream.next();
 
   return vec;
+}
+
+/**
+ * Consume a tokenStream with its next token equal to '{', and return an Array with all
+ * the elements that are inside the curly braces.
+ * @param tstream {Object}
+ * @returns {Array}
+ */
+function read_hashmap(tstream) {
+  var hashmap = [];
+
+  // drop the { bracket
+  tstream.next();
+
+  while (tstream.peek() !== '}' && !tstream.eof()) {
+    hashmap.push(read_form(tstream));
+  }
+
+  if (tstream.peek() !== '}') {
+    throw Error('expected \'}\' got EOF');
+  }
+
+  // drop the } bracket
+  tstream.next();
+
+  return hashmap;
 }
 
 /**
@@ -486,10 +528,10 @@ function read_atom(tstream) {
   var atom = tstream.next();
 
   if (!isNaN(atom)) {
-    return { type: 'number', value: parseInt(atom) };
+    return {type: 'number', value: parseInt(atom)};
   }
 
-  return { type: 'symbol', value: atom };
+  return {type: 'symbol', value: atom};
 }
 
 /**
