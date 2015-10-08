@@ -25,27 +25,37 @@
         <entry file="file://$PROJECT_DIR$/reader.js">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="414" column="48" selection-start-line="414" selection-start-column="36" selection-end-line="414" selection-end-column="48" />
+              <caret line="158" column="17" selection-start-line="158" selection-start-column="17" selection-end-line="158" selection-end-column="17" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="execution.log" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/execution.log">
+      <file leaf-file-name="step1_read_print.js" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/step1_read_print.js">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="430" column="0" selection-start-line="430" selection-start-column="0" selection-end-line="430" selection-end-column="0" />
+              <caret line="44" column="23" selection-start-line="44" selection-start-column="8" selection-end-line="44" selection-end-column="23" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="printer.js" pinned="false" current-in-tab="false">
+      <file leaf-file-name="token_stream.js" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/token_stream.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0">
+              <caret line="196" column="5" selection-start-line="196" selection-start-column="5" selection-end-line="196" selection-end-column="5" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="printer.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/printer.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="55" column="16" selection-start-line="55" selection-start-column="16" selection-end-line="55" selection-end-column="16" />
+            <state vertical-scroll-proportion="1.6386554">
+              <caret line="104" column="27" selection-start-line="104" selection-start-column="27" selection-end-line="104" selection-end-column="27" />
               <folding />
             </state>
           </provider>
@@ -55,17 +65,17 @@
         <entry file="file://$PROJECT_DIR$/tests/reader.js">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="227" column="28" selection-start-line="227" selection-start-column="28" selection-end-line="227" selection-end-column="28" />
+              <caret line="208" column="25" selection-start-line="208" selection-start-column="25" selection-end-line="208" selection-end-column="25" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="step1_read_print.js" pinned="false" current-in-tab="true">
+      <file leaf-file-name="step1_read_print.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/tests/step1_read_print.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.29936975">
-              <caret line="17" column="0" selection-start-line="17" selection-start-column="0" selection-end-line="17" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.0">
+              <caret line="22" column="0" selection-start-line="22" selection-start-column="0" selection-end-line="22" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -93,10 +103,12 @@
         <option value="$PROJECT_DIR$/tests/tokens.js" />
         <option value="$PROJECT_DIR$/execution.log" />
         <option value="$PROJECT_DIR$/step1_read_print.js" />
-        <option value="$PROJECT_DIR$/reader.js" />
+        <option value="$PROJECT_DIR$/input_stream.js" />
         <option value="$PROJECT_DIR$/tests/reader.js" />
-        <option value="$PROJECT_DIR$/printer.js" />
+        <option value="$PROJECT_DIR$/token_stream.js" />
+        <option value="$PROJECT_DIR$/reader.js" />
         <option value="$PROJECT_DIR$/tests/step1_read_print.js" />
+        <option value="$PROJECT_DIR$/printer.js" />
       </list>
     </option>
   </component>
@@ -386,18 +398,26 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/execution.log">
+    <entry file="file://$PROJECT_DIR$/input_stream.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="430" column="0" selection-start-line="430" selection-start-column="0" selection-end-line="430" selection-end-column="0" />
+        <state vertical-scroll-proportion="-0.15021008">
+          <caret line="1" column="0" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tests/reader.js">
+    <entry file="file://$PROJECT_DIR$/execution.log">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="2.0556722">
+          <caret line="831" column="0" selection-start-line="831" selection-start-column="0" selection-end-line="831" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/token_stream.js">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="227" column="28" selection-start-line="227" selection-start-column="28" selection-end-line="227" selection-end-column="28" />
+          <caret line="196" column="5" selection-start-line="196" selection-start-column="5" selection-end-line="196" selection-end-column="5" />
           <folding />
         </state>
       </provider>
@@ -405,31 +425,39 @@
     <entry file="file://$PROJECT_DIR$/reader.js">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="414" column="48" selection-start-line="414" selection-start-column="36" selection-end-line="414" selection-end-column="48" />
+          <caret line="158" column="17" selection-start-line="158" selection-start-column="17" selection-end-line="158" selection-end-column="17" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/step1_read_print.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.11029412">
-          <caret line="7" column="1" selection-start-line="7" selection-start-column="1" selection-end-line="7" selection-end-column="1" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/printer.js">
+    <entry file="file://$PROJECT_DIR$/tests/reader.js">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="55" column="16" selection-start-line="55" selection-start-column="16" selection-end-line="55" selection-end-column="16" />
+          <caret line="208" column="25" selection-start-line="208" selection-start-column="25" selection-end-line="208" selection-end-column="25" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/tests/step1_read_print.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.29936975">
-          <caret line="17" column="0" selection-start-line="17" selection-start-column="0" selection-end-line="17" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.0">
+          <caret line="22" column="0" selection-start-line="22" selection-start-column="0" selection-end-line="22" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/step1_read_print.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="44" column="23" selection-start-line="44" selection-start-column="8" selection-end-line="44" selection-end-column="23" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/printer.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="1.6386554">
+          <caret line="104" column="27" selection-start-line="104" selection-start-column="27" selection-end-line="104" selection-end-column="27" />
           <folding />
         </state>
       </provider>

@@ -230,3 +230,17 @@ test('tokenStream hashmap assertions', function(assert) {
   assert.end();
 
 });
+
+test('tokenStream deref assertions', function(assert) {
+  var sexp = '@a';
+
+  var is = reader.inputStream(sexp);
+  var ts = reader.tokenStream(is);
+
+  assert.equal(ts.peek(), '@', 'first peek');
+  assert.equal(ts.next(), '@', 'next item = @');
+  assert.equal(ts.next(), 'a', 'next item = a');
+  assert.equal(ts.next(), null, 'next item = null');
+  assert.end();
+
+});

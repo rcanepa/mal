@@ -40,12 +40,12 @@ if (require.main === module) {
     try {
       printer.println(REP(data));
     }
-    catch (exc) {
-      if (exc.stack) {
-        printer.println(exc.stack);
+    catch (err) {
+      if (err.stack) {
+        printer.println(err.stack);
       }
       else {
-        printer.println(exc);
+        printer.println(err);
       }
     }
     rli.prompt()

@@ -10,12 +10,16 @@ function pr_str(mal_ds) {
     return pr_list(mal_ds);
   }
 
-  if ('quote quasiquote unquote splice-unquote'.indexOf(mal_ds.type) >= 0) {
+  if ('quote quasiquote unquote splice-unquote deref'.indexOf(mal_ds.type) >= 0) {
     return pr_quote(mal_ds);
   }
 
   if (mal_ds.type === 'symbol') {
     return pr_symbol(mal_ds.value);
+  }
+
+  if (mal_ds.type === 'with-meta') {
+    return pr_metadata(mal_ds);
   }
 
   return pr_number(mal_ds.value);
@@ -86,6 +90,18 @@ function pr_number(elem) {
   return elem + '';
 }
 
+/**
+ * Consume a metadata object and return its string representation.
+ * @param elem
+ * @returns {string}
+ */
+function pr_metadata(elem) {
+  return '(' + elem.type + ' ' + pr_str(elem.value[1]) + ' ' + pr_str(elem.value[0]) + ')';
+}
+
+/**
+ * Console.log wrapper to print results.
+ */
 var println = function () {
   console.log.apply(console, arguments);
 };

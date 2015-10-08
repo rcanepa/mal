@@ -14,6 +14,8 @@ test('', function(assert) {
   assert.equal(repl.REP('{"abc" 1}'), '{"abc" 1}', 'testing hashmaps');
   assert.equal(repl.REP('{"abc" {"a" {"b" 12}}}'), '{"abc" {"a" {"b" 12}}}', 'testing nested hashmaps');
   assert.equal(repl.REP('{"abc" {"a" {"b" [1 2 3]}}}'), '{"abc" {"a" {"b" [1 2 3]}}}', 'testing nested hashmaps with a vector');
+  assert.equal(repl.REP('@abc'), '(deref abc)', 'testing deref');
+  assert.equal(repl.REP('^{"a" 10} [1 2 3]'), '(with-meta [1 2 3] {"a" 10})', 'testing metadata');
   assert.end();
 });
 
