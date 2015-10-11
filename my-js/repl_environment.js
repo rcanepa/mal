@@ -14,23 +14,17 @@ function mul (a, b) { return a * b }
 function div (a, b) { return a / b }
 function mod (a, b) { return a % b }
 
-function minus (args) {
-  return R.reduce(sub, args[0], args.slice(1))
-}
-
-function multiplicate (args) {
-  return R.reduce(mul, args[0], args.slice(1))
-}
-
-function divide (args) {
-  return R.reduce(div, args[0], args.slice(1))
+function reduceMathFn (mathfn) {
+  return function (args) { 
+    return R.reduce(mathfn, args[0], args.slice(1))
+  }
 }
 
 var env = {
-  '+': R.pipe(sliceArguments, R.reduce(add, 0)),
-  '-': R.pipe(sliceArguments, minus),
-  '*': R.pipe(sliceArguments, multiplicate),
-  '/': R.pipe(sliceArguments, divide),
+  '+': R.pipe(sliceArguments, reduceMathFn(add)),
+  '-': R.pipe(sliceArguments, reduceMathFn(sub)),
+  '*': R.pipe(sliceArguments, reduceMathFn(mul)),
+  '/': R.pipe(sliceArguments, reduceMathFn(div)),
   '%': mod 
 }
 

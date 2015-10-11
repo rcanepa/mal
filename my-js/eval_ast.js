@@ -21,16 +21,16 @@ function eval_ast (mal_ds, env) {
       throw new Error('unrecognized symbol:', mal_ds.value)
     }
   }
-  else if (mal_ds.type === 'list') {
+  
+  if (mal_ds.type === 'list' || mal_ds.type === 'vector') {
     var lst = []
     mal_ds.value.forEach(function (elem, idx, arr) {
       lst.push(mal_eval(elem, env))
     })
     return lst
   }
-  else {
-    return mal_ds.value
-  }
+  
+  return mal_ds.value
 }
 
 module.exports = {
