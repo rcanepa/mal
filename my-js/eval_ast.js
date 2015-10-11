@@ -1,13 +1,15 @@
 'use strict'
 
-function mal_eval (str, env) {
-  if (Object.prototype.toString.call(str) === '[object Array]') {
-    var lst_eval = eval_ast(str, env)
+var map = require('./utils/map')
+
+function mal_eval (mal_ds, env) {
+  if (mal_ds.type === 'list') {
+    var lst_eval = eval_ast(mal_ds, env)
     var fn = lst_eval[0]
     var args = lst_eval.slice(1)
     return fn.apply(env, args)
   }
-  return eval_ast(str, env)
+  return eval_ast(mal_ds, env)
 }
 
 function eval_ast (mal_ds, env) {
@@ -20,10 +22,18 @@ function eval_ast (mal_ds, env) {
     }
   }
   else if (mal_ds.type === 'list') {
-    return null
+    var lst = []
+    mal_ds.value.forEach(function (elem, idx, arr) {
+      lst.push(mal_eval(elem, env))
+    })
+    return lst
+  }
+  else {
+    return mal_ds.value
   }
 }
 
 module.exports = {
+  mal_eval: mal_eval,
   eval_ast: eval_ast
 }

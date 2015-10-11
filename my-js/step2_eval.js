@@ -3,22 +3,11 @@
 var printer = require('./printer')
 var reader = require('./reader')
 var eval_ast = require('./eval_ast').eval_ast
+var mal_eval = require('./eval_ast').mal_eval
 var repl_env = require('./repl_environment')
 
 function READ (str) {
   return reader.read_str(str)
-}
-
-function EVAL (str, env) {
-  console.log('EVAL:', str)
-  return str
-  if (Object.prototype.toString.call(str) === '[object Array]') {
-    var lst_eval = eval_ast(str, env)
-    var fn = lst_eval[0]
-    var args = lst_eval.slice(1)
-    return fn.apply(env, args)
-  }
-  return eval_ast(str, env)
 }
 
 function PRINT (str) {
@@ -26,7 +15,7 @@ function PRINT (str) {
 }
 
 function REP (str, env) {
-  return PRINT(EVAL(READ(str), env))
+  return mal_eval(READ(str), env)
 }
 
 /*
@@ -48,7 +37,7 @@ if (require.main === module) {
 
   rli.on('line', function (data) {
     try {
-      printer.println(REP(data), repl_env)
+      printer.println(REP(data, repl_env))
     }
     catch (err) {
       if (err.stack) {
