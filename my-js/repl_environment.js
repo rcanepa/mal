@@ -1,6 +1,11 @@
+/*
+ * Set the parent REPL's environment
+ */
+
 'use strict'
 
 var R = require('ramda')
+var env = require('./env')
 
 var slice = Array.prototype.slice
 
@@ -20,12 +25,11 @@ function reduceMathFn (mathfn) {
   }
 }
 
-var env = {
-  '+': R.pipe(sliceArguments, reduceMathFn(add)),
-  '-': R.pipe(sliceArguments, reduceMathFn(sub)),
-  '*': R.pipe(sliceArguments, reduceMathFn(mul)),
-  '/': R.pipe(sliceArguments, reduceMathFn(div)),
-  '%': mod 
-}
+var replEnv = env(null)
+replEnv.set('+', R.pipe(sliceArguments, reduceMathFn(add)))
+replEnv.set('-', R.pipe(sliceArguments, reduceMathFn(sub)))
+replEnv.set('*', R.pipe(sliceArguments, reduceMathFn(mul)))
+replEnv.set('/', R.pipe(sliceArguments, reduceMathFn(div)))
+replEnv.set('%', mod)
 
-module.exports = env
+module.exports = replEnv

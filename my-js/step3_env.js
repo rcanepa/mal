@@ -3,7 +3,7 @@
 var printer = require('./printer')
 var reader = require('./reader')
 var mal_eval = require('./eval_ast').malEval
-var repl_env = require('./repl_environment')
+var replEnv = require('./repl_environment')
 
 function READ (str) {
   return reader.read_str(str)
@@ -36,7 +36,7 @@ if (require.main === module) {
 
   rli.on('line', function (data) {
     try {
-      printer.println(REP(data, repl_env))
+      printer.println(REP(data, replEnv))
     }
     catch (err) {
       if (err.stack) {
