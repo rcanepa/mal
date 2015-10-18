@@ -1,28 +1,52 @@
+'use strict'
+
+var R = require('ramda')
+
 /**
  * Consume a MAL data structure (AST) and return a string representation of the
  * equivalent s-expression.
  * @param mal_ds
  * @returns {String}
  */
-function pr_str(mal_ds) {
-
+function pr_str (mal_ds) {
+  // console.log(mal_ds)
   if (mal_ds.type === 'list' || mal_ds.type === 'vector' || mal_ds.type === 'hashmap') {
-    return pr_list(mal_ds);
+    return pr_list(mal_ds)
   }
 
   if ('quote quasiquote unquote splice-unquote deref'.indexOf(mal_ds.type) >= 0) {
-    return pr_quote(mal_ds);
+    return pr_quote(mal_ds)
   }
 
   if (mal_ds.type === 'symbol') {
-    return pr_symbol(mal_ds.value);
+    return pr_symbol(mal_ds.value)
   }
 
   if (mal_ds.type === 'with-meta') {
-    return pr_metadata(mal_ds);
+    return pr_metadata(mal_ds)
   }
 
-  return pr_number(mal_ds.value);
+  if (mal_ds.type === 'boolean') {
+    return mal_ds.value
+  }
+
+  if (mal_ds.type === 'closure') {
+    return '#'
+  }
+
+  if (mal_ds.type === 'string') {
+    return mal_ds.value
+  }
+
+  if (mal_ds.type === 'number') {
+    return pr_number(mal_ds.value)
+  }
+
+  if (mal_ds.type === 'def') {
+    return mal_ds.value
+  }
+
+  throw new Error('unrecognized AST node: ' + JSON.stringify(mal_ds))
 }
 
 /**
@@ -30,37 +54,27 @@ function pr_str(mal_ds) {
  * @param elem {Object}
  * @returns {String}
  */
-function pr_list(elem) {
-  var opener = '', values = '', sexp = '';
-
+function pr_list (elem) {
   if (elem.type === 'list') {
-    opener += '(';
+    return addPrefixSuffix('(', ')', R.join(' ', R.map(pr_str, elem.value)))
   }
-  else if (elem.type === 'vector') {
-    opener += '[';
-  }
-  else {
-    opener += '{';
+  
+  if (elem.type === 'vector') {
+    return addPrefixSuffix('[', ']', R.join(' ', R.map(pr_str, elem.value)))
   }
 
-  elem.value.forEach(function(element, index, array) {
-    values += pr_str(element) + ' ';
-  });
+  return addPrefixSuffix('{', '}', R.join(' ', R.map(pr_str, elem.value)))
+}
 
-  sexp += opener + values;
-  sexp = sexp.trim();
-
-  if (elem.type === 'list') {
-    sexp += ')';
-  }
-  else if (elem.type === 'vector'){
-    sexp += ']';
-  }
-  else {
-    sexp += '}';
-  }
-
-  return sexp;
+/**
+ * Consume a string and return a new string with an added prefix and suffix.
+ * @param pre {string}
+ * @param suf {string}
+ * @param str {string}
+ * @returns {string}
+ */
+function addPrefixSuffix (pre, suf, str) {
+  return pre + str + suf
 }
 
 /**
@@ -68,8 +82,8 @@ function pr_list(elem) {
  * @param elem
  * @returns {string}
  */
-function pr_quote(elem) {
-  return '(' + elem.type + ' ' + pr_str(elem.value) + ')';
+function pr_quote (elem) {
+  return '(' + elem.type + ' ' + pr_str(elem.value) + ')'
 }
 
 /**
@@ -77,8 +91,8 @@ function pr_quote(elem) {
  * @param elem
  * @returns {String}
  */
-function pr_symbol(elem) {
-  return elem;
+function pr_symbol (elem) {
+  return elem
 }
 
 /**
@@ -86,8 +100,8 @@ function pr_symbol(elem) {
  * @param elem
  * @returns {String}
  */
-function pr_number(elem) {
-  return elem + '';
+function pr_number (elem) {
+  return elem + ''
 }
 
 /**
@@ -95,18 +109,18 @@ function pr_number(elem) {
  * @param elem
  * @returns {string}
  */
-function pr_metadata(elem) {
-  return '(' + elem.type + ' ' + pr_str(elem.value[1]) + ' ' + pr_str(elem.value[0]) + ')';
+function pr_metadata (elem) {
+  return '(' + elem.type + ' ' + pr_str(elem.value[1]) + ' ' + pr_str(elem.value[0]) + ')'
 }
 
 /**
  * Console.log wrapper to print results.
  */
 var println = function () {
-  console.log.apply(console, arguments);
-};
+  console.log.apply(console, arguments)
+}
 
 module.exports = {
   pr_str: pr_str,
   println: println
-};
+}
