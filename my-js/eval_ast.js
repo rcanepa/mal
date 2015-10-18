@@ -4,27 +4,16 @@ var R = require('ramda')
 var envFactory = require('./env').env
 var closureFactory = require('./closure')
 var astNode = require('./ast').astNode
-var getFirst = require('./helpers').getNth(0)
-var getSecond = require('./helpers').getNth(1)
-var getThird = require('./helpers').getNth(2)
-var getType = require('./helpers').getProp('type')
-var getValue = require('./helpers').getProp('value')
-
-// [{mal_ds}, ..., {mal_ds}] -> string
-// get the type property from the first element of a list of AST nodes 
-var getTypeFromFirstNode = R.pipe(getFirst, getType)
-
-// [{mal_ds}, ..., {mal_ds}] -> *
-// get the value property from the first element of a list of AST nodes
-var getValueFromFirstNode = R.pipe(getFirst, getValue)
-
-// [{mal_ds}, ..., {mal_ds}] -> *
-// get the value property from the second element of a list of AST nodes 
-var getValueFromSecondNode = R.pipe(getSecond, getValue)
-
-// [{mal_ds}, ..., {mal_ds}] -> *
-// get the value property from the third element of a list of AST nodes 
-var getValueFromThirdNode = R.pipe(getThird, getValue)
+var helpers = require('./helpers')
+var getFirst = helpers.getFirst
+var getSecond = helpers.getSecond
+var getThird = helpers.getThird
+var getType = helpers.getType
+var getValue = helpers.getValue
+var getTypeFromFirstNode = helpers.getTypeFromFirstNode 
+var getValueFromFirstNode = helpers.getValueFromFirstNode
+var getValueFromSecondNode = helpers.getValueFromSecondNode
+var getValueFromThirdNode = helpers.getValueFromThirdNode
 
 
 function malEval (env, mal_ds) {
@@ -92,7 +81,6 @@ function malEval (env, mal_ds) {
      * }
      */
 
-    console.log(evaluatedNodes)
     if (getTypeFromFirstNode(evaluatedNodes) === 'function') {
       return getValueFromFirstNode(evaluatedNodes).apply(env, evaluatedNodes.slice(1))
     }
@@ -108,7 +96,6 @@ function malEval (env, mal_ds) {
         )
       }
       closure.getArgs().forEach(function (e, i, a) {
-        console.log('closure binding:', e, args[i])
         closure.env.set(e, args[i])
       })
       return malEval(closure.env, closure.getBody())
@@ -120,7 +107,6 @@ function malEval (env, mal_ds) {
 }
 
 function evalAST (env, mal_ds) {
-  console.log('evalAST: ', mal_ds)
   if (getType(mal_ds) === 'list') {
     return evalList(R.curry(malEval)(env), mal_ds)
   }
